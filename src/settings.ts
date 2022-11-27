@@ -1,6 +1,6 @@
 export const settings = {
-  canvasWidth: 1024,
-  canvasHeight: 768,
+  canvasWidth: 800,
+  canvasHeight: 600,
   brickRowCount: 6,
   brickColumnCount: 5,
   brickHeight: 20,
