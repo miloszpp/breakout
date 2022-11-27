@@ -6,23 +6,31 @@ export interface DrawingContext {
   ctx: CanvasRenderingContext2D;
 }
 
-export function drawBall({ ctx }: DrawingContext, ball: BallState) {
+export function drawBall(
+  { ctx }: DrawingContext,
+  ball: BallState,
+  settings: GameSettigns
+) {
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-  ctx.fillStyle = "#0095DD";
+  ctx.fillStyle = settings.ballColor;
   ctx.fill();
   ctx.closePath();
 }
 
-function drawPaddle({ ctx, canvas }: DrawingContext, paddle: PaddleState) {
+function drawPaddle(
+  { ctx }: DrawingContext,
+  paddle: PaddleState,
+  settings: GameSettigns
+) {
   ctx.beginPath();
   ctx.rect(
     paddle.x,
-    canvas.height - paddle.height,
+    settings.canvasHeight - paddle.height,
     paddle.width,
     paddle.height
   );
-  ctx.fillStyle = "#0095DD";
+  ctx.fillStyle = settings.paddleColor;
   ctx.fill();
   ctx.closePath();
 }
@@ -34,6 +42,9 @@ function drawBricks(
 ) {
   for (let c = 0; c < settings.brickColumnCount; c++) {
     for (let r = 0; r < settings.brickRowCount; r++) {
+      if (bricks.data[c][r].isDestroyed) {
+        continue;
+      }
       ctx.beginPath();
       ctx.rect(
         bricks.data[c][r].x,
@@ -41,7 +52,7 @@ function drawBricks(
         settings.brickWidth,
         settings.brickHeight
       );
-      ctx.fillStyle = "#0095DD";
+      ctx.fillStyle = settings.brickColor;
       ctx.fill();
       ctx.closePath();
     }
@@ -54,12 +65,12 @@ export function draw(
   settings: GameSettigns,
   shouldContinue: () => boolean
 ) {
-  const { canvas, ctx } = context;
+  const { ctx } = context;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, settings.canvasWidth, settings.canvasHeight);
 
-  drawBall(context, state.ball);
-  drawPaddle(context, state.paddle);
+  drawBall(context, state.ball, settings);
+  drawPaddle(context, state.paddle, settings);
   drawBricks(context, state.bricks, settings);
 
   if (shouldContinue()) {

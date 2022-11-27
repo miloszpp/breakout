@@ -1,5 +1,4 @@
 import { Controls } from "./controls";
-import { DrawingContext } from "./draw";
 import { GameSettigns } from "./settings";
 
 export interface BallState {
@@ -20,6 +19,7 @@ export interface PaddleState {
 interface Brick {
   x: number;
   y: number;
+  isDestroyed: boolean;
 }
 
 export interface BricksState {
@@ -29,21 +29,14 @@ export interface BricksState {
 export interface GameState {
   ball: BallState;
   paddle: PaddleState;
-  boundaries: {
-    width: number;
-    height: number;
-  };
   bricks: BricksState;
 }
 
-export function getInitialState(
-  { canvas }: DrawingContext,
-  settings: GameSettigns
-): GameState {
+export function getInitialState(settings: GameSettigns): GameState {
   const bricks: BricksState = { data: [] };
   for (let c = 0; c < settings.brickColumnCount; c++) {
-    const brickRow: Brick[] = [];
-    bricks.data.push(brickRow);
+    const column: Brick[] = [];
+    bricks.data.push(column);
     for (let r = 0; r < settings.brickRowCount; r++) {
       const brickX =
         c * (settings.brickWidth + settings.brickPadding) +
@@ -51,9 +44,10 @@ export function getInitialState(
       const brickY =
         r * (settings.brickHeight + settings.brickPadding) +
         settings.brickOffsetTop;
-      brickRow.push({
+      column.push({
         x: brickX,
         y: brickY,
+        isDestroyed: false,
       });
     }
   }
@@ -61,40 +55,58 @@ export function getInitialState(
   return {
     bricks,
     ball: {
-      x: 50,
-      y: 50,
-      radius: 10,
-      dx: 2,
-      dy: 2,
+      x: settings.canvasWidth * Math.random(),
+      y: settings.canvasHeight / 2,
+      radius: settings.ballRadius,
+      dx: settings.ballSpeed,
+      dy: settings.ballSpeed,
     },
     paddle: {
-      x: (canvas.width - 75) / 2,
-      width: 75,
+      x: (settings.canvasWidth - settings.canvasWidth / 7) / 2,
+      width: settings.canvasWidth / 7,
       height: 10,
-      speed: 5,
-    },
-    boundaries: {
-      width: canvas.width,
-      height: canvas.height,
+      speed: settings.paddleSpeed,
     },
   };
+}
+
+function getCollidingBrick(
+  state: GameState,
+  settings: GameSettigns
+): Brick | undefined {
+  for (let c = 0; c < settings.brickColumnCount; c++) {
+    for (let r = 0; r < settings.brickRowCount; r++) {
+      const b = state.bricks.data[c][r];
+      if (
+        !b.isDestroyed &&
+        state.ball.x > b.x &&
+        state.ball.x < b.x + settings.brickWidth &&
+        state.ball.y > b.y &&
+        state.ball.y < b.y + settings.brickHeight
+      ) {
+        return b;
+      }
+    }
+  }
+  return undefined;
 }
 
 export function updateState(
   state: GameState,
   controls: Controls,
+  settings: GameSettigns,
   onGameOver: () => void
 ) {
-  const { ball, paddle, boundaries } = state;
+  const { ball, paddle } = state;
   if (
-    ball.x + ball.dx > boundaries.width - ball.radius ||
+    ball.x + ball.dx > settings.canvasWidth - ball.radius ||
     ball.x + ball.dx < ball.radius
   ) {
     ball.dx = -ball.dx;
   }
   if (ball.y + ball.dy < ball.radius) {
     ball.dy = -ball.dy;
-  } else if (ball.y + ball.dy > boundaries.height - ball.radius) {
+  } else if (ball.y + ball.dy > settings.canvasHeight - ball.radius) {
     if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
       ball.dy = -ball.dy;
     } else {
@@ -102,10 +114,19 @@ export function updateState(
     }
   }
 
+  const collidingBrick = getCollidingBrick(state, settings);
+  if (collidingBrick !== undefined) {
+    ball.dy = -ball.dy;
+    collidingBrick.isDestroyed = true;
+  }
+
   ball.x += ball.dx;
   ball.y += ball.dy;
 
-  if (controls.rightPressed && paddle.x + paddle.width <= boundaries.width) {
+  if (
+    controls.rightPressed &&
+    paddle.x + paddle.width <= settings.canvasWidth
+  ) {
     paddle.x += paddle.speed;
   } else if (controls.leftPressed && paddle.x >= 0) {
     paddle.x -= paddle.speed;
