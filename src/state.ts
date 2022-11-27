@@ -56,7 +56,7 @@ export function getInitialState(settings: GameSettigns): GameState {
     bricks,
     ball: {
       x: settings.canvasWidth * Math.random(),
-      y: settings.canvasHeight / 2,
+      y: settings.canvasHeight / 3,
       radius: settings.ballRadius,
       dx: settings.ballSpeed,
       dy: settings.ballSpeed,
