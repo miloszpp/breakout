@@ -35,7 +35,6 @@ function main() {
       updateState(state, controls, settings, () => {
         shouldContinue = false;
         clearInterval(updateStateInterval);
-        alert("GAME OVER");
       }),
     10
   );

@@ -26,10 +26,14 @@ export interface BricksState {
   data: Brick[][];
 }
 
+export type GameStatus = "InProgress" | "Win" | "Fail";
+
 export interface GameState {
   ball: BallState;
   paddle: PaddleState;
   bricks: BricksState;
+  score: number;
+  status: GameStatus;
 }
 
 export function getInitialState(settings: GameSettigns): GameState {
@@ -67,6 +71,8 @@ export function getInitialState(settings: GameSettigns): GameState {
       height: 10,
       speed: settings.paddleSpeed,
     },
+    score: 0,
+    status: "InProgress",
   };
 }
 
@@ -110,6 +116,7 @@ export function updateState(
     if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
       ball.dy = -ball.dy;
     } else {
+      state.status = "Fail";
       onGameOver();
     }
   }
@@ -118,6 +125,10 @@ export function updateState(
   if (collidingBrick !== undefined) {
     ball.dy = -ball.dy;
     collidingBrick.isDestroyed = true;
+    state.score++;
+    if (state.score === settings.brickColumnCount * settings.brickRowCount) {
+      state.status = "Win";
+    }
   }
 
   ball.x += ball.dx;

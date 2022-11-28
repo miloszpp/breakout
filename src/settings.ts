@@ -7,12 +7,10 @@ export const settings = {
   brickPadding: 10,
   brickOffsetTop: 30,
   brickOffsetLeft: 30,
-  brickColor: "#00a878",
   ballSpeed: 3,
   ballRadius: 10,
-  ballColor: "#fe5e41",
   paddleSpeed: 5,
-  paddleColor: "#f3c178",
+  colors: ["#00a878", "#fe5e41", "#f3c178"] as const,
 
   get brickWidth() {
     return (
